@@ -1,4 +1,5 @@
 var experss=require("express");
+var fortunes=require("./lib/fortune.js")
 var handlebars=require("express3-handlebars")
     .create({
       defaultLayout:"main",
@@ -13,6 +14,11 @@ app.set("view engine","handlebars");
 // 用 res.set 和 res.status 替换了 Node 的 res.writeHead
 app.set('port',process.env.PORT||3000);
 //在 Express 中，路由和中间件的添加顺序至关重要。如果我们把 404 处理器放在所有路由上面，那首页和关于页面就不能用了，访问这些 URL 得到的都 是 404。现在我们的路由相当简单，但其实它们还能支持通配符，这会导致顺序上的问题。
+//我们准备用一些中间件来检测查询字符串中的 test=1。它必须出现在我们定义的所有路由 之前
+app.use(function(req, res, next){
+  res.locals.showTests = app.get('env')!=='production'&&req.query.test ==='1';
+  next();
+});
 app.get("/",function(req,res){
   // res.type('text/plain');
   // res.send("home")
@@ -22,15 +28,17 @@ app.get("/",function(req,res){
 app.get("/about",function(req,res){
   // res.type('text/plain');
   // res.send("about")
-  var fortunes = [
-    "Conquer your fears or they will conquer you.",
-    "Rivers need springs.",
-    "Do not fear what you don't know.",
-    "You will have a pleasant surprise.",
-    "Whenever possible, keep it simple.", ];
-
-      res.render('about',{fortunes});
+    res.render('about',{
+      fortunes:fortunes.getFortunes(),
+      pageTestScript:"/qa/tests-about.js"
+    });
 });
+app.get('/tours/hood-river',function(req,res){
+  res.render('tours/hood-river');
+})
+app.get('/tours/request-group-rate',function(req,res){
+  res.render('tours/request-group-rate')
+})
 
 //定制404页面
 app.use(function(req,res){
@@ -55,3 +63,4 @@ app.use(function(err,req,res,next){
 app.listen(app.get('port'),function(){
   console.log("express started on "+app.get('port'));
 })
+if( app.thing == null ) console.log( 'bleat!' );
